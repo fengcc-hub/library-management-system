@@ -1,5 +1,5 @@
 # 图书馆管理系统 (Library Management System)
-
+> 本项目使用AI辅助编码，**全部业务需求、架构设计、权限逻辑、缓存事务、代码校验、Bug调试均由本人独立完成**；AI仅用于代码片段生成、工具类简化，所有逻辑经过人工审核、重构、自测，完整理解每一行代码实现原理。
 基于 **Spring Boot + MyBatis-Plus + MySQL + Redis + Vue.js + Element UI + ECharts** 的前后端分离图书馆管理系统。
 
 ## 技术栈
