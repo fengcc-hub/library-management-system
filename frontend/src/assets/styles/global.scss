@@ -1,0 +1,144 @@
+/* Global Styles - Library Management System */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+  background-color: #f0f2f5;
+  color: #303133;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #c0c4cc;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #909399;
+}
+
+/* Page container */
+.app-container {
+  padding: 20px;
+}
+
+/* Card spacing */
+.filter-card {
+  margin-bottom: 16px;
+  border-radius: 10px;
+}
+
+/* Table action buttons */
+.table-actions {
+  margin-bottom: 16px;
+}
+
+/* Pagination center */
+.pagination-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+/* Card general styling */
+.el-card {
+  border-radius: 10px;
+  border: none;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.el-card.is-hover-shadow:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Table styling */
+.el-table {
+  border-radius: 8px;
+}
+
+.el-table th {
+  background-color: #f5f7fa !important;
+  color: #606266;
+  font-weight: 600;
+}
+
+/* Button enhancement */
+.el-button--primary {
+  background: linear-gradient(135deg, #409eff, #36cfc9);
+  border: none;
+}
+
+.el-button--primary:hover {
+  background: linear-gradient(135deg, #66b1ff, #5cdbd3);
+}
+
+/* Tag enhancement */
+.el-tag {
+  border-radius: 6px;
+}
+
+/* Input focus enhancement */
+.el-input__inner:focus {
+  border-color: #409eff;
+  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.12);
+}
+
+/* Dialog enhancement */
+.el-dialog {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.el-dialog__header {
+  background: #f5f7fa;
+  padding: 16px 20px;
+}
+
+.el-dialog__title {
+  font-weight: 600;
+}
+
+/* Form label */
+.el-form-item__label {
+  font-weight: 500;
+}
+
+/* Menu item hover */
+.el-menu-item:hover {
+  background-color: rgba(64, 158, 255, 0.15) !important;
+}
+
+/* Chart container */
+.chart-container {
+  width: 100%;
+  height: 350px;
+}
+
+/* Fade animation */
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.fade-enter, .fade-leave-to {
+  opacity: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .app-container {
+    padding: 10px;
+  }
+}

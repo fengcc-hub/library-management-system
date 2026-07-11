@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.library.mapper.BookMapper">
+
+    <resultMap id="bookCategoryMap" type="com.library.entity.Book">
+        <id column="id" property="id"/>
+        <result column="isbn" property="isbn"/>
+        <result column="title" property="title"/>
+        <result column="author" property="author"/>
+        <result column="publisher" property="publisher"/>
+        <result column="publish_date" property="publishDate"/>
+        <result column="category_id" property="categoryId"/>
+        <result column="price" property="price"/>
+        <result column="location" property="location"/>
+        <result column="total_count" property="totalCount"/>
+        <result column="available_count" property="availableCount"/>
+        <result column="description" property="description"/>
+        <result column="cover_url" property="coverUrl"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="category_name" property="categoryName"/>
+        <result column="borrow_count" property="borrowCount"/>
+    </resultMap>
+
+    <sql id="selectColumns">
+        b.id, b.isbn, b.title, b.author, b.publisher, b.publish_date, b.category_id,
+        b.price, b.location, b.total_count, b.available_count, b.description,
+        b.cover_url, b.status, b.create_time, b.update_time,
+        c.name as category_name
+    </sql>
+
+    <select id="selectBookPage" resultMap="bookCategoryMap">
+        SELECT <include refid="selectColumns"/>
+        FROM book b
+        LEFT JOIN book_category c ON b.category_id = c.id AND c.deleted = 0
+        WHERE b.deleted = 0
+        <if test="keyword != null and keyword != ''">
+            AND (b.title LIKE CONCAT('%', #{keyword}, '%')
+                 OR b.isbn LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        <if test="categoryId != null">
+            AND b.category_id = #{categoryId}
+        </if>
+        <if test="author != null and author != ''">
+            AND b.author LIKE CONCAT('%', #{author}, '%')
+        </if>
+        ORDER BY b.create_time DESC
+    </select>
+
+    <select id="selectBookById" resultMap="bookCategoryMap">
+        SELECT <include refid="selectColumns"/>
+        FROM book b
+        LEFT JOIN book_category c ON b.category_id = c.id AND c.deleted = 0
+        WHERE b.deleted = 0 AND b.id = #{id}
+    </select>
+
+    <update id="decrementAvailableCount">
+        UPDATE book
+        SET available_count = available_count - 1,
+            update_time = NOW()
+        WHERE id = #{id}
+          AND deleted = 0
+          AND available_count > 0
+    </update>
+
+    <update id="incrementAvailableCount">
+        UPDATE book
+        SET available_count = available_count + 1,
+            update_time = NOW()
+        WHERE id = #{id}
+          AND deleted = 0
+          AND available_count &lt; total_count
+    </update>
+
+    <select id="selectHotBooks" resultMap="bookCategoryMap">
+        SELECT <include refid="selectColumns"/>,
+               (SELECT COUNT(*) FROM borrow_record br WHERE br.book_id = b.id AND br.deleted = 0) as borrow_count
+        FROM book b
+        LEFT JOIN book_category c ON b.category_id = c.id AND c.deleted = 0
+        WHERE b.deleted = 0 AND b.status = 1
+        ORDER BY borrow_count DESC, b.available_count DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectCountByCategory" resultType="java.util.Map">
+        SELECT c.id as categoryId, c.name as categoryName,
+               COUNT(b.id) as bookCount,
+               COALESCE(SUM(b.total_count), 0) as totalCount
+        FROM book_category c
+        LEFT JOIN book b ON c.id = b.category_id AND b.deleted = 0
+        WHERE c.deleted = 0 AND c.parent_id = 0
+        GROUP BY c.id, c.name
+        ORDER BY bookCount DESC
+    </select>
+
+</mapper>

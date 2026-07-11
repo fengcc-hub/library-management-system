@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.library.mapper.CategoryMapper">
+
+    <resultMap id="categoryMap" type="com.library.entity.Category">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="parent_id" property="parentId"/>
+        <result column="sort" property="sort"/>
+        <result column="description" property="description"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="book_count" property="bookCount"/>
+    </resultMap>
+
+    <select id="selectAllWithBookCount" resultMap="categoryMap">
+        SELECT c.id, c.name, c.parent_id, c.sort, c.description,
+               c.create_time, c.update_time,
+               (SELECT COUNT(*) FROM book b WHERE b.category_id = c.id AND b.deleted = 0) as book_count
+        FROM book_category c
+        WHERE c.deleted = 0
+        ORDER BY c.sort ASC, c.id ASC
+    </select>
+
+    <select id="selectCategoryById" resultMap="categoryMap">
+        SELECT c.id, c.name, c.parent_id, c.sort, c.description,
+               c.create_time, c.update_time,
+               (SELECT COUNT(*) FROM book b WHERE b.category_id = c.id AND b.deleted = 0) as book_count
+        FROM book_category c
+        WHERE c.deleted = 0 AND c.id = #{id}
+    </select>
+
+    <select id="selectByParentId" resultMap="categoryMap">
+        SELECT c.id, c.name, c.parent_id, c.sort, c.description,
+               c.create_time, c.update_time
+        FROM book_category c
+        WHERE c.deleted = 0 AND c.parent_id = #{parentId}
+        ORDER BY c.sort ASC
+    </select>
+
+</mapper>

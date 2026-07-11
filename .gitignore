@@ -1,0 +1,21 @@
+# IDEA
+.idea/
+*.iml
+out/
+target/
+# VSCode
+.vscode/
+# 前端Vue
+frontend/node_modules/
+frontend/dist/
+frontend/npm-debug.log
+frontend/yarn-error.log
+frontend/.env*
+# 日志
+*.log
+# 系统文件
+.DS_Store
+Thumbs.db
+# 数据库配置（避免泄露账号密码）
+backend/application.yml
+backend/application-dev.yml

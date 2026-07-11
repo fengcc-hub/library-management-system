@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.library.mapper.BorrowRecordMapper">
+
+    <resultMap id="recordDetailMap" type="com.library.entity.BorrowRecord">
+        <id column="id" property="id"/>
+        <result column="record_no" property="recordNo"/>
+        <result column="user_id" property="userId"/>
+        <result column="book_id" property="bookId"/>
+        <result column="borrow_date" property="borrowDate"/>
+        <result column="due_date" property="dueDate"/>
+        <result column="return_date" property="returnDate"/>
+        <result column="status" property="status"/>
+        <result column="renew_count" property="renewCount"/>
+        <result column="fine_amount" property="fineAmount"/>
+        <result column="fine_status" property="fineStatus"/>
+        <result column="remark" property="remark"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="username" property="username"/>
+        <result column="real_name" property="realName"/>
+        <result column="book_title" property="bookTitle"/>
+        <result column="book_isbn" property="bookIsbn"/>
+        <result column="reader_no" property="readerNo"/>
+    </resultMap>
+
+    <sql id="detailColumns">
+        br.id, br.record_no, br.user_id, br.book_id, br.borrow_date, br.due_date,
+        br.return_date, br.status, br.renew_count, br.fine_amount, br.fine_status,
+        br.remark, br.create_time, br.update_time,
+        u.username, u.real_name, u.reader_no,
+        b.title as book_title, b.isbn as book_isbn
+    </sql>
+
+    <select id="selectRecordPage" resultMap="recordDetailMap">
+        SELECT <include refid="detailColumns"/>
+        FROM borrow_record br
+        LEFT JOIN sys_user u ON br.user_id = u.id AND u.deleted = 0
+        LEFT JOIN book b ON br.book_id = b.id AND b.deleted = 0
+        WHERE br.deleted = 0
+        <if test="userId != null">
+            AND br.user_id = #{userId}
+        </if>
+        <if test="bookId != null">
+            AND br.book_id = #{bookId}
+        </if>
+        <if test="status != null">
+            AND br.status = #{status}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (u.username LIKE CONCAT('%', #{keyword}, '%')
+                 OR u.real_name LIKE CONCAT('%', #{keyword}, '%')
+                 OR u.reader_no LIKE CONCAT('%', #{keyword}, '%')
+                 OR b.title LIKE CONCAT('%', #{keyword}, '%')
+                 OR br.record_no LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        ORDER BY br.borrow_date DESC
+    </select>
+
+    <select id="selectRecordById" resultMap="recordDetailMap">
+        SELECT <include refid="detailColumns"/>
+        FROM borrow_record br
+        LEFT JOIN sys_user u ON br.user_id = u.id AND u.deleted = 0
+        LEFT JOIN book b ON br.book_id = b.id AND b.deleted = 0
+        WHERE br.deleted = 0 AND br.id = #{id}
+    </select>
+
+    <select id="selectActiveBorrowsByUser" resultMap="recordDetailMap">
+        SELECT <include refid="detailColumns"/>
+        FROM borrow_record br
+        LEFT JOIN sys_user u ON br.user_id = u.id AND u.deleted = 0
+        LEFT JOIN book b ON br.book_id = b.id AND b.deleted = 0
+        WHERE br.deleted = 0 AND br.user_id = #{userId}
+          AND br.status IN (0, 2)
+        ORDER BY br.borrow_date DESC
+    </select>
+
+    <select id="countActiveBorrows" resultType="int">
+        SELECT COUNT(*) FROM borrow_record
+        WHERE deleted = 0 AND user_id = #{userId} AND status IN (0, 2)
+    </select>
+
+    <select id="selectOverdueUnmarked" resultMap="recordDetailMap">
+        SELECT <include refid="detailColumns"/>
+        FROM borrow_record br
+        LEFT JOIN sys_user u ON br.user_id = u.id AND u.deleted = 0
+        LEFT JOIN book b ON br.book_id = b.id AND b.deleted = 0
+        WHERE br.deleted = 0 AND br.status = 0 AND br.due_date &lt; NOW()
+    </select>
+
+    <update id="batchMarkOverdue">
+        UPDATE borrow_record
+        SET status = 2, update_time = NOW()
+        WHERE deleted = 0 AND status = 0 AND due_date &lt; NOW()
+        AND id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <select id="selectMonthlyBorrowCount" resultType="java.util.Map">
+        SELECT DATE_FORMAT(borrow_date, '%Y-%m') as month,
+               COUNT(*) as count
+        FROM borrow_record
+        WHERE deleted = 0
+          AND borrow_date >= DATE_SUB(CURDATE(), INTERVAL #{months} MONTH)
+        GROUP BY DATE_FORMAT(borrow_date, '%Y-%m')
+        ORDER BY month ASC
+    </select>
+
+    <select id="selectDailyBorrowCount" resultType="java.util.Map">
+        SELECT DATE(borrow_date) as date,
+               COUNT(*) as count
+        FROM borrow_record
+        WHERE deleted = 0
+          AND borrow_date >= DATE_SUB(CURDATE(), INTERVAL #{days} DAY)
+        GROUP BY DATE(borrow_date)
+        ORDER BY date ASC
+    </select>
+
+    <select id="selectTopBorrowedBooks" resultType="java.util.Map">
+        SELECT b.id as bookId, b.title as bookTitle, b.author as author,
+               COUNT(br.id) as borrowCount
+        FROM borrow_record br
+        LEFT JOIN book b ON br.book_id = b.id AND b.deleted = 0
+        WHERE br.deleted = 0
+        GROUP BY b.id, b.title, b.author
+        ORDER BY borrowCount DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectReaderActivityRanking" resultType="java.util.Map">
+        SELECT u.id as userId, u.username as username, u.real_name as realName,
+               u.reader_no as readerNo,
+               COUNT(br.id) as borrowCount
+        FROM borrow_record br
+        LEFT JOIN sys_user u ON br.user_id = u.id AND u.deleted = 0
+        WHERE br.deleted = 0
+        GROUP BY u.id, u.username, u.real_name, u.reader_no
+        ORDER BY borrowCount DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectOverallStats" resultType="java.util.Map">
+        SELECT
+            COUNT(*) as totalBorrows,
+            SUM(CASE WHEN status IN (0, 2) THEN 1 ELSE 0 END) as activeBorrows,
+            SUM(CASE WHEN status = 2 THEN 1 ELSE 0 END) as overdueCount,
+            SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) as returnedCount,
+            COALESCE(SUM(fine_amount), 0) as totalFine
+        FROM borrow_record
+        WHERE deleted = 0
+    </select>
+
+</mapper>
